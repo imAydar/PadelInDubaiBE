@@ -6,6 +6,7 @@ using PadelInDubai.DAL;
 using PadelInDubai.HostedServices;
 using PadelInDubai.Middlewares;
 using PadelInDubai.Services;
+using PadelInDubai.Services.Interfaces;
 using Telegram.Bot;
 using static Telegram.Bot.TelegramBotClient;
 

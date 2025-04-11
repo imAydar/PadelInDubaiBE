@@ -2,6 +2,7 @@
 using PadelInDubai.Mappings;
 using PadelInDubai.Migrations;
 using PadelInDubai.Models;
+using PadelInDubai.Models.Dtos;
 using System.Text;
 using System.Text.RegularExpressions;
 using Telegram.Bot;

@@ -2,6 +2,7 @@
 using PadelInDubai.DAL.Entities;
 using PadelInDubai.Mappings;
 using PadelInDubai.Models;
+using PadelInDubai.Services.Interfaces;
 
 namespace PadelInDubai.Services
 {

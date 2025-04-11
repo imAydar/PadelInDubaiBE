@@ -4,6 +4,7 @@ using PadelInDubai.DAL.Entities;
 using PadelInDubai.Extensions;
 using PadelInDubai.Mappings;
 using PadelInDubai.Services;
+using PadelInDubai.Services.Interfaces;
 
 namespace PadelInDubai.DAL
 {

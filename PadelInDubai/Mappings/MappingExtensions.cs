@@ -1,5 +1,6 @@
 ﻿using PadelInDubai.DAL.Entities;
 using PadelInDubai.Models;
+using PadelInDubai.Models.Dtos;
 
 namespace PadelInDubai.Mappings
 {

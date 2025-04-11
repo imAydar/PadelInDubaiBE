@@ -5,6 +5,7 @@ using PadelInDubai.DAL;
 using PadelInDubai.Mappings;
 using PadelInDubai.Models;
 using PadelInDubai.Services;
+using PadelInDubai.Services.Interfaces;
 
 namespace PadelInDubai.Controllers
 {
