@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PadelInDubai.Attributes;
 using PadelInDubai.Services;
 using PadelInDubai.Services.Interfaces;
 
@@ -6,6 +7,7 @@ namespace PadelInDubai.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[LocalhostOnly]
 public class EventController(ILogger<EventController> logger, IEventService service, TelegramService tgService, IBookingService bookingService) : ControllerBase
 {
     private readonly ILogger<EventController> _logger = logger;

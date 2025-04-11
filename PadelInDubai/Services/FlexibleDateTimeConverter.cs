@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Globalization;
 
-namespace PadelInDubai.Controllers
+namespace PadelInDubai.Services
 {
     public class FlexibleDateTimeConverter : JsonConverter<DateTime>
     {
@@ -28,7 +28,7 @@ namespace PadelInDubai.Controllers
 
         public override void WriteJson(JsonWriter writer, DateTime value, JsonSerializer serializer)
         {
-            var dt = (DateTime)value;
+            var dt = value;
             writer.WriteValue(dt.ToString("yyyy-MM-dd HH:mm:ss"));
         }
     }
