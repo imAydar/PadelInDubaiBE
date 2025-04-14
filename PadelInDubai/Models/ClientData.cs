@@ -11,6 +11,6 @@
         public int SuccessVisitsCount { get; set; }
         public int FailVisitsCount { get; set; }
         public List<ClientTagData> ClientTags { get; set; }
-        public string Level { get; internal set; }
+        public string? Level { get; internal set; }
     }
 }
