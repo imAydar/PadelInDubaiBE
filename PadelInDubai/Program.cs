@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json.Serialization;
 using PadelInDubai.BackgroundServices;
 using PadelInDubai.DAL;
@@ -8,11 +7,13 @@ using PadelInDubai.Middlewares;
 using PadelInDubai.Services;
 using PadelInDubai.Services.Interfaces;
 using Telegram.Bot;
-using static Telegram.Bot.TelegramBotClient;
 
-var t = Environment.GetEnvironmentVariable("PD_connection");
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel((context, options) =>
+{
+    options.Configure(context.Configuration.GetSection("Kestrel"));
+});
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(Environment.GetEnvironmentVariable("PD_connection")));
 
@@ -60,7 +61,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<RequestLoggerMiddleware>();
-Console.WriteLine("deployes successfully #@!1");
 
 //app.UseHttpsRedirection();
 
