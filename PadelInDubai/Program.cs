@@ -60,7 +60,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<RequestLoggerMiddleware>();
-
+Console.WriteLine("deployes successfully #@!1");
 
 //app.UseHttpsRedirection();
 
