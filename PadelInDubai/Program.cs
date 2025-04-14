@@ -62,7 +62,7 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<RequestLoggerMiddleware>();
 
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 app.MapControllers();
