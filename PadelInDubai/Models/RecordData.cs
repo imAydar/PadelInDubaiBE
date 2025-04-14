@@ -42,6 +42,6 @@
         public int ActivityId { get; set; }
         //public List<object> CustomFields { get; set; }
         public List<DocumentData> Documents { get; set; }
-        public int SmsRemainHours { get; set; }
+        public int? SmsRemainHours { get; set; }
     }
 }

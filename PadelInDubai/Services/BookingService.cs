@@ -25,7 +25,7 @@ namespace PadelInDubai.Services
             _telegramService = telegramService;
         }
 
-        public async Task Create(RecordData recordData)
+        public async Task Sync_v2(RecordData recordData)
         {
             await _repository.Create(recordData.ToEntity());
         }
@@ -72,7 +72,8 @@ namespace PadelInDubai.Services
             }
 
             var saved = await _repository.SaveRecordsAsync(records.Select(r => r.ToEntity()).ToList());
-            
+            //TODO: refactor.
+            evt = await _eventRepository.GetByIdAsync(activityId);
             if (sendMessages)
             {
                 if (evt.MessageId.HasValue)
