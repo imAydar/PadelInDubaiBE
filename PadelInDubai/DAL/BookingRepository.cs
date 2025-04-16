@@ -71,6 +71,7 @@ namespace PadelInDubai.DAL
 
         public async Task<Record> Delete(Record record)
         {
+            _cache.Clear();
             var entity = await _context.Records.FindAsync(record.Id);
             if (entity == null)
             {
@@ -208,6 +209,7 @@ namespace PadelInDubai.DAL
         }
         public async Task<List<Record>> SaveRecordsAsync(List<Record> recordGot)
         {
+            _cache.Clear();
             if (recordGot == null || recordGot.Count == 0)
                 return null;
 
