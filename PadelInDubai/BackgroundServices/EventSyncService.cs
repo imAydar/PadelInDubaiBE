@@ -14,7 +14,7 @@ namespace PadelInDubai.BackgroundServices
             await Task.WhenAll(
                 _scheduledApiService.CallApiAtRecurringTimeAsync(
                     "/Event/Sync",
-                    GetNextMonday,
+                    GetNext10AM,
                     stoppingToken),
 
                 _scheduledApiService.CallApiAtRecurringTimeAsync(
@@ -22,6 +22,16 @@ namespace PadelInDubai.BackgroundServices
                     GetNext11PM,
                     stoppingToken)
             );
+        }
+
+        private static DateTime GetNext10AM(DateTime fromDate)
+        {
+            var next10AM = fromDate.Date.AddHours(10);
+            if (fromDate.TimeOfDay >= new TimeSpan(10, 0, 0))
+            {
+                next10AM = next10AM.AddDays(1);
+            }
+            return next10AM;
         }
 
         private static DateTime GetNextMonday(DateTime fromDate)
