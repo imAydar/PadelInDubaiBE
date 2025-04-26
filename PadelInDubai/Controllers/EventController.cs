@@ -30,14 +30,14 @@ public class EventController(ILogger<EventController> logger, IEventService serv
     [HttpPost("Sync")]
     public async Task<IActionResult> Sync()
     {
-        await _service.Sync(true);
+        await _service.Sync();
         return NoContent();
     }
 
     [HttpPost("SyncPastEvents")]
     public async Task<IActionResult> SyncPastEvents()
     {
-        //await _service.SyncPastDbEvents();
+        await _service.SyncPastDbEvents();
         return NoContent();
     }
 

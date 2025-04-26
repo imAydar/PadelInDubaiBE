@@ -60,34 +60,36 @@ namespace PadelInDubai.Services
             return eventEntity?.ToDto();
         }
 
-        public async Task Sync(bool syncTillEndOfTheWeek = false)
+        public async Task Sync()
         {
             var events = await _client.GetUpcomingEvents();
-            
-            if (syncTillEndOfTheWeek)
-            {
-                var endOfSunday = DateTime.Today.AddDays(7 - (int)DateTime.Today.DayOfWeek).Date;
-                events = events.Where(e => e.Date <= endOfSunday);
-            }
 
-            var entities = await _eventRepository.UpsertEventsAsync(events.Select(e => e.ToEntity()));
-            
-            var upcomingEvents = entities
-                .Where(x => x.Date <= DateTime.UtcNow.AddDays(7))
-                .OrderBy(x => x.Date);
-                
+            var endOfNextDay = DateTime.Today.AddDays(2).AddSeconds(-1);
+            events = events.Where(e => e.Date <= endOfNextDay);
+
+            var upcomingEvents = await _eventRepository.UpsertEventsAsync(events.Select(e => e.ToEntity()));
             foreach (var evt in upcomingEvents)
             {
                 await _bookingService.SyncById(evt.Id);
                 var entity = await _eventRepository.GetByIdAsync(evt.Id);
-                
+
                 if (entity.MessageId.HasValue)
                 {
-                    await _telegramService.UpdateEventMessageAsync(entity.ToDto());
+                    try
+                    {
+                        await _telegramService.UpdateEventMessageAsync(entity.ToDto());
+                    }
+                    catch(Exception ex)
+                    {
+                        if (ex.Message == "Bad Request: message to edit not found")
+                        {
+                            await _telegramService.SendEventMessageAsync(entity.ToDto(), pin: true);
+                        }
+                    }
                 }
                 else
                 {
-                    await _telegramService.SendEventMessageAsync(entity.ToDto());
+                    await _telegramService.SendEventMessageAsync(entity.ToDto(), pin: true);
                 }
             }
         }
@@ -95,8 +97,7 @@ namespace PadelInDubai.Services
         public async Task SyncPastDbEvents()
         {
             var pastEvents = (await _eventRepository.GetAllAsync())
-                .Where(e => e.Date.Day == 9 && e.Date.Month == 4)
-                //.Where(e => e.Date <= DateTime.Now && !e.LastUpdate && e.Date > DateTime.Now.AddDays(-7))
+                .Where(e => e.Date <= DateTime.Now && !e.LastUpdate)
                 .OrderByDescending(e => e.Date)
                 .ToList();
 
@@ -104,19 +105,19 @@ namespace PadelInDubai.Services
             {
                 foreach (var pastEvent in pastEvents)
                 {
-                    if (pastEvent.Date.Day == 9)
-                    {
-                        var t = 0;
-                    }
                     await _bookingService.SyncById(pastEvent.Id);
                     pastEvent.LastUpdate = true;
+                    //if (pastEvent.Pinned)
+                    //{
+                    //    _telegramService.Unpin(pastEvent);
+                    //}
                 }
-
+                await _telegramService.UnpinAll();
                 await _eventRepository.UpsertEventsAsync(pastEvents);
             }
             catch(Exception ex)
             {
-                var t1 = ex;
+                var dbg = ex;
             }
         }
 

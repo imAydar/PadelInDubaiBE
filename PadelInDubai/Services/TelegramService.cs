@@ -1,4 +1,6 @@
-﻿using PadelInDubai.DAL;
+﻿using Microsoft.Extensions.Logging;
+using PadelInDubai.Controllers;
+using PadelInDubai.DAL;
 using PadelInDubai.Mappings;
 using PadelInDubai.Migrations;
 using PadelInDubai.Models;
@@ -12,8 +14,10 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PadelInDubai.Services
 {
-    public class TelegramService(ITelegramBotClient botClient, IEventRepository eventRepository)
+    public class TelegramService(ILogger<TelegramService> logger, ITelegramBotClient botClient, IEventRepository eventRepository)
     {
+        private readonly ILogger<TelegramService> _logger = logger;
+
         private static readonly string _chatId = Environment.GetEnvironmentVariable("PD_TgChatId");
         private const int _gamesTopicId = 38;
         private const int _trainsTopicId = 37;
@@ -44,7 +48,7 @@ namespace PadelInDubai.Services
             }
         }
 
-        public async Task SendEventMessageAsync(EventDto evt)
+        public async Task SendEventMessageAsync(EventDto evt, bool pin = false)
         {
             var chatId = new ChatId(_chatId);
 
@@ -62,6 +66,15 @@ namespace PadelInDubai.Services
                 parseMode: ParseMode.MarkdownV2,
                 replyMarkup: inlineKeyboard
             );
+
+            if (pin)
+            {
+                await _botClient.PinChatMessage(
+                    chatId: chatId,
+                    messageId: message.MessageId,
+                    disableNotification: false
+                );
+            }
 
             await _eventRepository.UpdateMessage(evt.Id, message.MessageId, caption.GetHashCode());
         }
@@ -97,6 +110,7 @@ namespace PadelInDubai.Services
             }
             catch (Exception ex)
             {
+                //TODO: exception for 404.
                 if (!ex.Message.Contains("there is no text in the message to edit") &&
                     !ex.Message.Contains("message is not modified"))
                 {
@@ -295,7 +309,7 @@ namespace PadelInDubai.Services
                 .Replace("!", "\\!");
         }
 
-
+        //Not working for msgs older than 2d.
         internal async Task DeleteMessages(IEnumerable<int> messageIds)
         {
             var chatId = new ChatId(_chatId);
@@ -319,6 +333,20 @@ namespace PadelInDubai.Services
                         var r = 0;
                     }
                 }
+            }
+        }
+
+        public async Task UnpinAll()
+        {
+            var chatId = new ChatId(_chatId);
+            try
+            {
+                await _botClient.UnpinAllForumTopicMessages(chatId: chatId, _gamesTopicId);
+                await _botClient.UnpinAllForumTopicMessages(chatId: chatId, _trainsTopicId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Couldn't unpin the messages", ex);
             }
         }
     }

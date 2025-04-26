@@ -60,12 +60,10 @@ namespace PadelInDubai.Services
             var records = await _client.GetRecords(activityId);
             var existingRecords = evt.Records?.ToList() ?? new List<Record>();
             
-            // Find records that are no longer in the client response
             var recordsToDelete = existingRecords
                 .Where(existing => !records.Any(r => r.Id == existing.Id))
                 .ToList();
 
-            // Delete records that are no longer present
             foreach (var recordToDelete in recordsToDelete)
             {
                 await _repository.Delete(recordToDelete);
@@ -76,13 +74,24 @@ namespace PadelInDubai.Services
             evt = await _eventRepository.GetByIdAsync(activityId);
             if (sendMessages)
             {
-                if (evt.MessageId.HasValue)
+                if (!evt.MessageId.HasValue)
                 {
-                    await _telegramService.UpdateEventMessageAsync(evt.ToDto());
+                    if (evt.Date.Date >= DateTimeOffset.Now.Date && evt.Date.Date <= DateTimeOffset.Now.Date.AddDays(1))
+                    {
+                        await _telegramService.SendEventMessageAsync(evt.ToDto());
+                    }
                 }
                 else
                 {
-                    await _telegramService.SendEventMessageAsync(evt.ToDto());
+                    try
+                    {
+                        await _telegramService.UpdateEventMessageAsync(evt.ToDto());
+                    }
+                    //TODO: 404 exc.
+                    catch(Exception ex)
+                    {
+                        await _telegramService.SendEventMessageAsync(evt.ToDto());
+                    }
                 }
             }
 

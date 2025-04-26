@@ -8,7 +8,7 @@ namespace PadelInDubai.Services.Interfaces
         Task DeleteTgData();
         Task<IEnumerable<EventDto>> GetAll();
         Task<EventDto?> GetById(int id);
-        Task Sync(bool syncTillEndOfTheWeek = false);
+        Task Sync();
         Task SyncPastDbEvents();
     }
 }
