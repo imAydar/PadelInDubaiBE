@@ -90,10 +90,10 @@ namespace PadelInDubai.Services
             }
 
             var txt = EscapeMarkdown(text);
-            if (txt.GetHashCode() == evt.TextHash)
-            {
-                return;
-            }
+            //if (txt.GetHashCode() == evt.TextHash)
+            //{
+            //    return;
+            //}
 
             try
             {
