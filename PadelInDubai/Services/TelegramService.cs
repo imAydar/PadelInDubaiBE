@@ -346,7 +346,7 @@ namespace PadelInDubai.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError("Couldn't unpin the messages", ex);
+                _logger.LogError(ex, "Couldn't unpin the messages");
             }
         }
     }

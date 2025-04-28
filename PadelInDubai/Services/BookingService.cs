@@ -47,18 +47,13 @@ namespace PadelInDubai.Services
 
         public async Task<List<Record>> SyncById(int activityId, bool sendMessages = false)
         {
-            //var evt = await _eventRepository.GetByIdAsync(activityId);
-            
-            //if (evt == null)
-            //{
-                var eventDto = await _client.GetEvent(activityId);
-                var evt = (await _eventRepository.UpsertEventsAsync([eventDto.ToEntity()]))
-                    .First();
+            var eventDto = await _client.GetEvent(activityId);
+            var evt = (await _eventRepository.UpsertEventsAsync([eventDto.ToEntity()]))
+                .First();
             evt = await _eventRepository.GetByIdAsync(activityId);
-            //}
 
             var records = await _client.GetRecords(activityId);
-            var existingRecords = evt.Records?.ToList() ?? new List<Record>();
+            var existingRecords = evt.Records?.ToList() ?? [];
             
             var recordsToDelete = existingRecords
                 .Where(existing => !records.Any(r => r.Id == existing.Id))
@@ -87,10 +82,16 @@ namespace PadelInDubai.Services
                     {
                         await _telegramService.UpdateEventMessageAsync(evt.ToDto());
                     }
-                    //TODO: 404 exc.
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
-                        await _telegramService.SendEventMessageAsync(evt.ToDto());
+                        if (ex.Message == "Bad Request: message to edit not found")
+                        {
+                            await _telegramService.SendEventMessageAsync(evt.ToDto());
+                        }
+                        else
+                        {
+                            throw;
+                        }
                     }
                 }
             }
