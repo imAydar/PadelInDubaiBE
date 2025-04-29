@@ -116,6 +116,7 @@ namespace PadelInDubai.DAL
                 {
                     if (existingStaff.TryGetValue(staffMember.Id, out var existingStaffMember))
                     {
+                        staffMember.LocationUrl = existingStaffMember.LocationUrl;
                         // Update existing staff
                         _context.Entry(existingStaffMember).CurrentValues.SetValues(staffMember);
                     }

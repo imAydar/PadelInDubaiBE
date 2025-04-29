@@ -49,7 +49,7 @@ namespace PadelInDubai.Mappings
                 Comment = modelEvent.Comment,
                 RecordsCount = modelEvent.RecordsCount,
                 Staff = modelEvent.Staff.ToEntity(),
-                Service = modelEvent.Service.ToEntity()
+                Service = modelEvent.Service.ToEntity(),
             };
         }
 
@@ -246,7 +246,7 @@ namespace PadelInDubai.Mappings
 
                 LocationName = evt.Staff?.Name,
                 LocationUrl = evt.Staff?.LocationUrl,
-                Picture = evt.Staff?.AvatarBig,
+                Picture = evt.Service?.ImageUrl ?? evt.Staff?.AvatarBig,
                 RecordsCount = evt.RecordsCount,
                 MessageId = evt.MessageId,
                 TextHash = evt.TextHash,

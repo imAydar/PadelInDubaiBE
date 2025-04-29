@@ -251,7 +251,7 @@ namespace PadelInDubai.Services
 📍 Где: [{eventDto.LocationName}]({eventDto.LocationUrl})
 Для кого: [Определятор Уровня](https://forms.gle/svzhWNGx354VHjY27)
 💰 Стоимость: {eventDto.PriceMax} AED
-Текст абонемента[Абонемент](https://padelindubai.club/p/packs/)
+[C абонементом](https://padelindubai.club/p/packs/) 135 AED
 👥 Места: {freeSlotsCount} из {eventDto.Capacity}  
 
 📌 Описание:
