@@ -16,6 +16,12 @@ namespace PadelInDubai.Controllers
         private readonly ILogger<EventController> _logger = logger;
         private readonly IBookingService _service = service;
 
+        [HttpGet("ping")]
+        public async Task<IActionResult> TestConnection()
+        {
+            return Ok("All good");
+        }
+
         [HttpPost("test-from-files")]
         public async Task<IActionResult> TestWebhookFromFiles()
         {
