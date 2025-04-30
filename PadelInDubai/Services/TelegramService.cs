@@ -11,6 +11,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using PadelInDubai.Extensions;
 
 namespace PadelInDubai.Services
 {
@@ -52,9 +53,8 @@ namespace PadelInDubai.Services
         {
             var chatId = new ChatId(_chatId);
 
-            var (inlineKeyboard, text) = GetMessageParams(evt);
+            var (inlineKeyboard, text) = evt.GetMessageParams();
 
-            var caption = EscapeMarkdown(text);
             int? topicId = evt.Group == Mappings.Group.Game ? _gamesTopicId :
                              evt.Group == Mappings.Group.Train ? _trainsTopicId :
                                 null;
@@ -62,7 +62,7 @@ namespace PadelInDubai.Services
                 chatId: chatId,
                 messageThreadId: _useTopics ? topicId.Value : null,
                 photo: evt.Picture,
-                caption: caption,
+                caption: text,
                 parseMode: ParseMode.MarkdownV2,
                 replyMarkup: inlineKeyboard
             );
@@ -76,20 +76,18 @@ namespace PadelInDubai.Services
                 );
             }
 
-            await _eventRepository.UpdateMessage(evt.Id, message.MessageId, caption.GetHashCode());
+            await _eventRepository.UpdateMessage(evt.Id, message.MessageId, text.GetHashCode());
         }
 
         public async Task UpdateEventMessageAsync(EventDto evt, List<RecordData> records = null)
         {
             var chatId = new ChatId(_chatId);
-            var (inlineKeyboard, text) = GetMessageParams(evt, records);
+            var (inlineKeyboard, text) = evt.GetMessageParams(records);
 
             if (!evt.MessageId.HasValue)
             {
                 throw new NullReferenceException();
             }
-
-            var txt = EscapeMarkdown(text);
             //if (txt.GetHashCode() == evt.TextHash)
             //{
             //    return;
@@ -100,13 +98,13 @@ namespace PadelInDubai.Services
                 await _botClient.EditMessageCaption(
                     chatId: chatId,
                     messageId: evt.MessageId.Value,
-                    caption: txt,
+                    caption: text,
                     parseMode: ParseMode.MarkdownV2,
                     default, default,
                     replyMarkup: inlineKeyboard
                 );
 
-                await _eventRepository.UpdateMessage(evt.Id, evt.MessageId.Value, txt.GetHashCode());
+                await _eventRepository.UpdateMessage(evt.Id, evt.MessageId.Value, text.GetHashCode());
             }
             catch (Exception ex)
             {
@@ -173,13 +171,11 @@ namespace PadelInDubai.Services
             {
                 foreach (var evt in events)
                 {
-                    var (inlineKeyboard, text) = GetMessageParams(evt.ToDto());
-
-                    var caption = EscapeMarkdown(text);
+                    var (inlineKeyboard, text) = evt.ToDto().GetMessageParams();
 
                     var message = await _botClient.SendMessage(
                         chatId: query.Message.Chat.Id,
-                        text: caption,
+                        text: text,
                         parseMode: ParseMode.MarkdownV2,
                         replyMarkup: inlineKeyboard
                     );
@@ -194,120 +190,7 @@ namespace PadelInDubai.Services
             }
         }
 
-        private (InlineKeyboardMarkup inlineKeyboard, string text) GetMessageParams(EventDto evt, List<RecordData> records = null)
-        {
-            var link = $"https://b818310.alteg.io/company/768552/activity/info/{evt.Id}";
-            // TODO: remove btn if date is greater than now.
-            var inlineKeyboard = new InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    InlineKeyboardButton.WithUrl("🎟️ Записаться", link)
-                }
-            });
-
-            var text = CreateTelegramMessage(evt);
-            text += GetPlayersText(evt.Records.ToList());
-
-            return (inlineKeyboard, text);
-        }
-
-        private string GetPlayersText(List<RecordData> records)
-        {
-            if (records?.Any() != true)
-            {
-                return string.Empty;
-            }
-
-            var message = string.Empty + Environment.NewLine;
-            var ind = 1;
-            for (int i = 0; i < records.Count; i++)
-            {
-                //var confirmed = records[i].PaidFull == 1 ? "✅" : string.Empty;
-                message += $"{ind++}.🎾 {records[i].Client.Name} {records[i].Client.Level}" + Environment.NewLine;
-                if (records[i].ClientsCount > 1)
-                {
-                    for (int j = 1; j < records[i].ClientsCount; j++)
-                    {
-                        message += $"{ind++}.🎾 {records[i].Client.Name} +1" + Environment.NewLine;
-                    }
-                }
-            }
-            message += "—\r\n[Анонсы игр](https://t.me/padeldubai_games)";
-            return message;
-        }
-
-        private string CreateTelegramMessage(EventDto eventDto)
-        {
-            var culture = new System.Globalization.CultureInfo("ru-RU");
-            var formattedDate = eventDto.Date.ToString("dddd, dd MMMM", culture);
-            var formattedTime = eventDto.Date.ToString("HH:mm");
-            var recordsCount = eventDto.Records?.Sum(r => r.ClientsCount) ?? eventDto.RecordsCount;
-            var freeSlotsCount = eventDto.Capacity - recordsCount < 0 ? 0 : eventDto.Capacity - recordsCount;
-            //https://maps.app.goo.gl/UKwd6Hx1LQQZqN917
-            var message = $@"
-🎾 {eventDto.Title}
-📅 Когда: {formattedDate} в {formattedTime}
-📍 Где: [{eventDto.LocationName}]({eventDto.LocationUrl})
-Для кого: [Определятор Уровня](https://forms.gle/svzhWNGx354VHjY27)
-💰 Стоимость: {eventDto.PriceMax} AED
-[C абонементом](https://padelindubai.club/p/packs/) 135 AED
-👥 Места: {freeSlotsCount} из {eventDto.Capacity}  
-
-📌 Описание:
-{eventDto.Comment}
-
-📩 Запись: нажмите на кнопку и укажите уровень.
-
-Возникнут вопросы? Пиши @padelindubai
-";
-
-            return message;
-        }
-
-
-        private string EscapeMarkdown(string input)
-        {
-            if (string.IsNullOrEmpty(input))
-                return input;
-
-            var linkRegex = new Regex(@"\[[^\]]+\]\([^)]+\)", RegexOptions.Compiled);
-            var parts = linkRegex.Split(input);
-            var matches = linkRegex.Matches(input);
-
-            var sb = new StringBuilder();
-            for (int i = 0; i < parts.Length; i++)
-            {
-                sb.Append(EscapeNonLinkText(parts[i]));
-                if (i < matches.Count)
-                    sb.Append(matches[i].Value);
-            }
-            return sb.ToString();
-        }
-
-        private string EscapeNonLinkText(string text)
-        {
-            return text
-                .Replace("\\", "\\\\")
-                .Replace("_", "\\_")
-                .Replace("*", "\\*")
-                .Replace("[", "\\[")
-                .Replace("]", "\\]")
-                .Replace("(", "\\(")
-                .Replace(")", "\\)")
-                .Replace("~", "\\~")
-                .Replace("`", "\\`")
-                .Replace(">", "\\>")
-                .Replace("#", "\\#")
-                .Replace("+", "\\+")
-                .Replace("-", "\\-")
-                .Replace("=", "\\=")
-                .Replace("|", "\\|")
-                .Replace("{", "\\{")
-                .Replace("}", "\\}")
-                .Replace(".", "\\.")
-                .Replace("!", "\\!");
-        }
+        
 
         //Not working for msgs older than 2d.
         internal async Task DeleteMessages(IEnumerable<int> messageIds)

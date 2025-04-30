@@ -1,4 +1,5 @@
 ﻿using PadelInDubai.DAL;
+using PadelInDubai.Extensions;
 using PadelInDubai.Mappings;
 using PadelInDubai.Models;
 using PadelInDubai.Models.Dtos;
@@ -14,8 +15,9 @@ namespace PadelInDubai.HostedServices
     {
         private readonly ITelegramBotClient _botClient;
         private readonly IEventRepository _eventRepository;
-
         private readonly ConcurrentDictionary<long, int> _lastMessageIds = new ConcurrentDictionary<long, int>();
+        private const int _gamesId = 10759477;
+        private const int _trainsId = 10761747;
 
         public TgMessagesHandler(ITelegramBotClient botClient, IEventRepository eventRepository)
         {
@@ -49,6 +51,10 @@ namespace PadelInDubai.HostedServices
             {
                 await HandleStart(update.Message);
             }
+            else if (update.Type == UpdateType.Message && update.Message.Text == "📅 Расписание")
+            {
+                // No longer needed, do nothing or remove this block
+            }
             else if (update.Type == UpdateType.CallbackQuery)
             {
                 var data = update.CallbackQuery.Data;
@@ -58,13 +64,26 @@ namespace PadelInDubai.HostedServices
                     await HandleDateSelection(update.CallbackQuery);
                 else if (data == "back_to_type")
                     await EditTypeSelection(update.CallbackQuery);
+                else if (data.StartsWith("back_to_days_"))
+                {
+                    int categoryId = int.Parse(data.Substring("back_to_days_".Length));
+                    await ShowDaysOfWeekSelection(update.CallbackQuery, categoryId);
+                }
                 else if (data.StartsWith("back_to_date_"))
                 {
-                    // e.g. back_to_date_2025-03-29_Games
+                    // e.g. back_to_date_2025-03-29_10759477
                     var parts = data.Split('_');
                     var dateStr = parts[3];
-                    var type = parts[4];
-                    await EditDateSelection(update.CallbackQuery, dateStr, type);
+                    var categoryId = int.Parse(parts[4]);
+                    await EditDateSelection(update.CallbackQuery, dateStr, categoryId);
+                }
+                else if (data.StartsWith("event_"))
+                {
+                    var idStr = data.Substring("event_".Length);
+                    if (int.TryParse(idStr, out int eventId))
+                    {
+                        await HandleEventSelection(update.CallbackQuery, eventId);
+                    }
                 }
             }
         }
@@ -90,14 +109,14 @@ namespace PadelInDubai.HostedServices
 
         private async Task HandleTypeSelection(CallbackQuery query)
         {
-            string selectedType = query.Data == "type_games" ? "Games" : "Trainings";
+            int selectedCategoryId = query.Data == "type_games" ? _gamesId : _trainsId;
             var today = DateTime.Today;
             var buttons = Enumerable.Range(0, 7)
                 .Select(offset => new[]
                 {
                     InlineKeyboardButton.WithCallbackData(
                         today.AddDays(offset).ToString("dddd, dd MMM"),
-                        $"date_{selectedType}_{today.AddDays(offset):yyyy-MM-dd}"
+                        $"date_{selectedCategoryId}_{today.AddDays(offset):yyyy-MM-dd}"
                     )
                 })
                 .ToList();
@@ -105,7 +124,7 @@ namespace PadelInDubai.HostedServices
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", "back_to_type") });
 
             int messageId = _lastMessageIds[query.Message.Chat.Id];
-            await _botClient.EditMessageTextAsync(
+            await _botClient.EditMessageText(
                 chatId: query.Message.Chat.Id,
                 messageId: messageId,
                 text: $"Выберите дату:",
@@ -124,7 +143,7 @@ namespace PadelInDubai.HostedServices
                 }
             };
             int messageId = _lastMessageIds[query.Message.Chat.Id];
-            await _botClient.EditMessageTextAsync(
+            await _botClient.EditMessageText(
                 chatId: query.Message.Chat.Id,
                 messageId: messageId,
                 text: "Выберите тип:",
@@ -134,36 +153,53 @@ namespace PadelInDubai.HostedServices
 
         private async Task HandleDateSelection(CallbackQuery query)
         {
-            var data = query.Data.Split('_'); // e.g. ["date", "Games", "2025-03-29"]
-            string type = data[1];
+            var data = query.Data.Split('_'); // e.g. ["date", "10759477", "2025-03-29"]
+            int categoryId = int.Parse(data[1]);
             var date = DateTime.Parse(data[2]);
-            var startOfDay = date.Date;
-            var endOfDay = startOfDay.AddDays(1);
 
-            var events = (await _eventRepository.GetAllAsync())
-                .Where(e => e.Date >= startOfDay && e.Date < endOfDay && e.Service.CategoryId == 10759477);
+            var events = await _eventRepository.GetByDate(date, categoryId);
 
             int messageId = _lastMessageIds[query.Message.Chat.Id];
 
             if (events.Any())
             {
-                var buttons = events.Select(evt => new[]
+                if (events.Count() == 1)
                 {
-                    InlineKeyboardButton.WithCallbackData($"{evt.Service.Title} {evt.Date:HH:mm}", $"event_{evt.Id}")
-                }).ToList();
-                // Add Back button to date selection
-                buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_date_{date:yyyy-MM-dd}_{type}") });
+                    var evt = events.First();
+                    var (inlineKeyboard, text) = evt.ToDto().GetMessageParams();
+                    // Add Back button as a new row
+                    var keyboardRows = inlineKeyboard.InlineKeyboard.ToList();
+                    keyboardRows.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_date_{evt.Date:yyyy-MM-dd}_{evt.Service.CategoryId}") });
+                    var updatedKeyboard = new InlineKeyboardMarkup(keyboardRows);
 
-                await _botClient.EditMessageTextAsync(
-                    chatId: query.Message.Chat.Id,
-                    messageId: messageId,
-                    text: $"Выберите событие:",
-                    replyMarkup: new InlineKeyboardMarkup(buttons)
-                );
+                    await _botClient.EditMessageText(
+                        chatId: query.Message.Chat.Id,
+                        messageId: messageId,
+                        text: text,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
+                        replyMarkup: updatedKeyboard
+                    );
+                }
+                else
+                {
+                    var buttons = events.Select(evt => new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData($"{evt.GetShortTitle()}", $"event_{evt.Id}")
+                    }).ToList();
+                    // Add Back button to date selection
+                    buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_date_{date:yyyy-MM-dd}_{categoryId}") });
+
+                    await _botClient.EditMessageText(
+                        chatId: query.Message.Chat.Id,
+                        messageId: messageId,
+                        text: $"Выберите событие:",
+                        replyMarkup: new InlineKeyboardMarkup(buttons)
+                    );
+                }
             }
             else
             {
-                await _botClient.EditMessageTextAsync(
+                await _botClient.EditMessageText(
                     chatId: query.Message.Chat.Id,
                     messageId: messageId,
                     text: "Не удалось найти события на этот день.\n⬅️ Назад",
@@ -174,14 +210,33 @@ namespace PadelInDubai.HostedServices
             }
         }
 
-        private async Task EditDateSelection(CallbackQuery query, string dateStr, string type)
+        private async Task ShowDaysOfWeekSelection(CallbackQuery query, int categoryId)
+        {
+            var today = DateTime.Today;
+            var buttons = Enumerable.Range(0, 7)
+                .Select(offset => new[] {
+                    InlineKeyboardButton.WithCallbackData(
+                        today.AddDays(offset).ToString("dddd, dd MMM"),
+                        $"date_{categoryId}_{today.AddDays(offset):yyyy-MM-dd}"
+                    )
+                }).ToList();
+            // Add back to type selection
+            buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", "back_to_type") });
+
+            int messageId = _lastMessageIds[query.Message.Chat.Id];
+            await _botClient.EditMessageText(
+                chatId: query.Message.Chat.Id,
+                messageId: messageId,
+                text: $"Выберите дату:",
+                replyMarkup: new InlineKeyboardMarkup(buttons)
+            );
+        }
+
+        private async Task EditDateSelection(CallbackQuery query, string dateStr, int categoryId)
         {
             var date = DateTime.Parse(dateStr);
-            var startOfDay = date.Date;
-            var endOfDay = startOfDay.AddDays(1);
 
-            var events = (await _eventRepository.GetAllAsync())
-                .Where(e => e.Date >= startOfDay && e.Date < endOfDay && e.Service.CategoryId == 10759477);
+            var events = await _eventRepository.GetByDate(date, categoryId);
 
             int messageId = _lastMessageIds[query.Message.Chat.Id];
 
@@ -189,12 +244,12 @@ namespace PadelInDubai.HostedServices
             {
                 var buttons = events.Select(evt => new[]
                 {
-                    InlineKeyboardButton.WithCallbackData($"{evt.Service.Title} {evt.Date:HH:mm}", $"event_{evt.Id}")
+                    InlineKeyboardButton.WithCallbackData($"{evt.GetShortTitle()}", $"event_{evt.Id}")
                 }).ToList();
-                // Add Back button to date selection
-                buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_type") });
+                // Add Back button to go back to days of week for this category
+                buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_days_{categoryId}") });
 
-                await _botClient.EditMessageTextAsync(
+                await _botClient.EditMessageText(
                     chatId: query.Message.Chat.Id,
                     messageId: messageId,
                     text: $"Выберите событие:",
@@ -203,100 +258,41 @@ namespace PadelInDubai.HostedServices
             }
             else
             {
-                await _botClient.EditMessageTextAsync(
+                await _botClient.EditMessageText(
                     chatId: query.Message.Chat.Id,
                     messageId: messageId,
-                    text: "Не удалось найти события на этот день.\n⬅️ Назад",
+                    text: "Не удалось найти события на этот день.",
                     replyMarkup: new InlineKeyboardMarkup(new[] {
-                        new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_type") }
+                        new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_days_{categoryId}") }
                     })
                 );
             }
         }
 
-        private (InlineKeyboardMarkup inlineKeyboard, string text) GetMessageParams(EventDto evt, List<RecordData> records = null)
+        private async Task HandleEventSelection(CallbackQuery query, int eventId)
         {
-            var link = $"https://b818310.alteg.io/company/768552/activity/info/{evt.Id}";
-            // TODO: remove btn if date is greater than now.
-            var inlineKeyboard = new InlineKeyboardMarkup(new[]
+            var evt = await _eventRepository.GetByIdAsync(eventId);
+            if (evt == null)
             {
-                new[]
-                {
-                    InlineKeyboardButton.WithUrl("🎟️ Записаться", link) // Replace with your actual event link
-                }
-            });
-
-            // Format the message text
-            var text = CreateTelegramMessage(evt);
-            text += GetPlayersText(evt.Records?.ToList());
-
-            return (inlineKeyboard, text);
-        }
-
-        private string GetPlayersText(List<RecordData> records)
-        {
-            if (records?.Any() != true)
-            {
-                return string.Empty;
+                await _botClient.AnswerCallbackQuery(query.Id, "Событие не найдено.");
+                return;
             }
 
-            var message = string.Empty + Environment.NewLine;
+            var (inlineKeyboard, text) = evt.ToDto().GetMessageParams();
+            // Add Back button as a new row
+            var keyboardRows = inlineKeyboard.InlineKeyboard.ToList();
+            keyboardRows.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_date_{evt.Date:yyyy-MM-dd}_{evt.Service.CategoryId}") });
+            var updatedKeyboard = new InlineKeyboardMarkup(keyboardRows);
 
-            for (int i = 0; i < records.Count; i++)
-            {
-                var confirmed = records[i].Confirmed == 1 ? "✅" : string.Empty;
-                message += $"{i + 1}.🎾 {records[i].Client.Name} {records[i].Client.Level} {confirmed}" + Environment.NewLine;
-            }
+            int messageId = _lastMessageIds[query.Message.Chat.Id];
 
-            return message;
-        }
-
-        private string CreateTelegramMessage(EventDto eventDto)
-        {
-            var culture = new System.Globalization.CultureInfo("ru-RU");
-            var formattedDate = eventDto.Date.ToString("dddd, dd MMMM", culture);
-            var formattedTime = eventDto.Date.ToString("HH:mm");
-
-            var message = $@"
-🎾 {eventDto.Title}
-📅 Когда: {formattedDate} в {formattedTime} 
-📍 Где: {eventDto.LocationName}  
-💰 Стоимость: {eventDto.PriceMax} AED  
-👥 Места: {eventDto.RecordsCount} из {eventDto.Capacity}  
-
-📌 Описание:
-{eventDto.Comment}
-
-📩 Как записаться: Нажмите на кнопку Записаться и укажите уровень в комментарии.  
-";
-
-            return message;
-        }
-
-        // Helper method to escape Markdown characters.
-        private string EscapeMarkdown(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return text;
-            return text
-                .Replace("_", "\\_")
-                .Replace("*", "\\*")
-                .Replace("[", "\\[")
-                .Replace("]", "\\]")
-                .Replace("(", "\\(")
-                .Replace(")", "\\)")
-                .Replace("~", "\\~")
-                .Replace("`", "\\`")
-                .Replace(">", "\\>")
-                .Replace("#", "\\#")
-                .Replace("+", "\\+")
-                .Replace("-", "\\-")
-                .Replace("=", "\\=")
-                .Replace("|", "\\|")
-                .Replace("{", "\\{")
-                .Replace("}", "\\}")
-                .Replace(".", "\\.")
-                .Replace("!", "\\!");
+            await _botClient.EditMessageText(
+                chatId: query.Message.Chat.Id,
+                messageId: messageId,
+                text: text,
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
+                replyMarkup: updatedKeyboard
+            );
         }
     }
 }

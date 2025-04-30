@@ -187,6 +187,22 @@ namespace PadelInDubai.DAL
             return events;
         }
 
+        public async Task<IEnumerable<Event>> GetByDate(DateTime date, int categoryId)
+        {
+            var startOfDay = date.Date;
+            var endOfDay = startOfDay.AddDays(1);
+
+            return await _context.Events
+                .Where(e => e.Date >= startOfDay && e.Date < endOfDay && e.Service.CategoryId == categoryId)
+                .Include(e => e.Staff)
+                .Include(e => e.Service)
+                    .ThenInclude(s => s.Category)
+                .Include(e => e.Records)
+                    .ThenInclude(r => r.Client)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public async Task<Event?> GetByIdAsync(int id)
         {
             string cacheKey = $"Event_{id}";
