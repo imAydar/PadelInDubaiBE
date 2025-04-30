@@ -7,7 +7,7 @@ namespace PadelInDubai.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-//[LocalhostOnly]
+[LocalhostOnly]
 public class EventController(ILogger<EventController> logger, IEventService service, TelegramService tgService, IBookingService bookingService) : ControllerBase
 {
     private readonly ILogger<EventController> _logger = logger;
