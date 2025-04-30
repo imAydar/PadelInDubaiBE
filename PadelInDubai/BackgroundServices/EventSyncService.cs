@@ -8,6 +8,7 @@ namespace PadelInDubai.BackgroundServices
     {
         private readonly IScheduledApiService _scheduledApiService = scheduledApiService;
         private readonly ILogger<EventSyncService> _logger = logger;
+        private static readonly TimeZoneInfo DubaiTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -26,12 +27,13 @@ namespace PadelInDubai.BackgroundServices
 
         private static DateTime GetNext10AM(DateTime fromDate)
         {
-            var next10AM = fromDate.Date.AddHours(10);
-            if (fromDate.TimeOfDay >= new TimeSpan(10, 0, 0))
+            var dubaiTime = TimeZoneInfo.ConvertTime(fromDate, DubaiTimeZone);
+            var next10AM = dubaiTime.Date.AddHours(10);
+            if (dubaiTime.TimeOfDay >= new TimeSpan(10, 0, 0))
             {
                 next10AM = next10AM.AddDays(1);
             }
-            return next10AM;
+            return TimeZoneInfo.ConvertTime(next10AM, DubaiTimeZone, TimeZoneInfo.Utc);
         }
 
         private static DateTime GetNextMonday(DateTime fromDate)
@@ -48,13 +50,13 @@ namespace PadelInDubai.BackgroundServices
 
         private static DateTime GetNext11PM(DateTime fromDate)
         {
-            var next11PM = fromDate.Date.AddHours(23);
-            if (fromDate.TimeOfDay >= new TimeSpan(23, 0, 0))
+            var dubaiTime = TimeZoneInfo.ConvertTime(fromDate, DubaiTimeZone);
+            var next11PM = dubaiTime.Date.AddHours(23);
+            if (dubaiTime.TimeOfDay >= new TimeSpan(23, 0, 0))
             {
                 next11PM = next11PM.AddDays(1);
             }
-
-            return next11PM;
+            return TimeZoneInfo.ConvertTime(next11PM, DubaiTimeZone, TimeZoneInfo.Utc);
         }
     }
 }
