@@ -1,5 +1,4 @@
-﻿
-using PadelInDubai.DAL;
+﻿using PadelInDubai.DAL;
 using PadelInDubai.Mappings;
 using PadelInDubai.Models;
 using PadelInDubai.Models.Dtos;
@@ -57,6 +56,16 @@ namespace PadelInDubai.HostedServices
                     await HandleTypeSelection(update.CallbackQuery);
                 else if (data.StartsWith("date_"))
                     await HandleDateSelection(update.CallbackQuery);
+                else if (data == "back_to_type")
+                    await EditTypeSelection(update.CallbackQuery);
+                else if (data.StartsWith("back_to_date_"))
+                {
+                    // e.g. back_to_date_2025-03-29_Games
+                    var parts = data.Split('_');
+                    var dateStr = parts[3];
+                    var type = parts[4];
+                    await EditDateSelection(update.CallbackQuery, dateStr, type);
+                }
             }
         }
 
@@ -71,7 +80,6 @@ namespace PadelInDubai.HostedServices
                 }
             };
 
-            // Send initial message and store its message ID.
             var sent = await _botClient.SendTextMessageAsync(
                 chatId: message.Chat.Id,
                 text: "Выберите тип:",
@@ -92,14 +100,34 @@ namespace PadelInDubai.HostedServices
                         $"date_{selectedType}_{today.AddDays(offset):yyyy-MM-dd}"
                     )
                 })
-                .ToArray();
+                .ToList();
+            // Add Back button
+            buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", "back_to_type") });
 
-            // Edit the original message instead of sending a new one.
             int messageId = _lastMessageIds[query.Message.Chat.Id];
             await _botClient.EditMessageTextAsync(
                 chatId: query.Message.Chat.Id,
                 messageId: messageId,
                 text: $"Выберите дату:",
+                replyMarkup: new InlineKeyboardMarkup(buttons)
+            );
+        }
+
+        private async Task EditTypeSelection(CallbackQuery query)
+        {
+            var buttons = new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("Игры", "type_games"),
+                    InlineKeyboardButton.WithCallbackData("Тренировки", "type_trainings")
+                }
+            };
+            int messageId = _lastMessageIds[query.Message.Chat.Id];
+            await _botClient.EditMessageTextAsync(
+                chatId: query.Message.Chat.Id,
+                messageId: messageId,
+                text: "Выберите тип:",
                 replyMarkup: new InlineKeyboardMarkup(buttons)
             );
         }
@@ -119,26 +147,69 @@ namespace PadelInDubai.HostedServices
 
             if (events.Any())
             {
-                foreach (var evt in events)
+                var buttons = events.Select(evt => new[]
                 {
-                    var (inlineKeyboard, text) = GetMessageParams(evt.ToDto());
+                    InlineKeyboardButton.WithCallbackData($"{evt.Service.Title} {evt.Date:HH:mm}", $"event_{evt.Id}")
+                }).ToList();
+                // Add Back button to date selection
+                buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_date_{date:yyyy-MM-dd}_{type}") });
 
-                    var caption = EscapeMarkdown(text);
-
-                    var message = await _botClient.SendMessage(
-                        chatId: query.Message.Chat.Id,
-                        text: caption,
-                        parseMode: ParseMode.MarkdownV2,
-                        replyMarkup: inlineKeyboard
-                    );
-                }
+                await _botClient.EditMessageTextAsync(
+                    chatId: query.Message.Chat.Id,
+                    messageId: messageId,
+                    text: $"Выберите событие:",
+                    replyMarkup: new InlineKeyboardMarkup(buttons)
+                );
             }
             else
             {
                 await _botClient.EditMessageTextAsync(
                     chatId: query.Message.Chat.Id,
                     messageId: messageId,
-                    text: "Не удалось найти события на этот день."
+                    text: "Не удалось найти события на этот день.\n⬅️ Назад",
+                    replyMarkup: new InlineKeyboardMarkup(new[] {
+                        new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_type") }
+                    })
+                );
+            }
+        }
+
+        private async Task EditDateSelection(CallbackQuery query, string dateStr, string type)
+        {
+            var date = DateTime.Parse(dateStr);
+            var startOfDay = date.Date;
+            var endOfDay = startOfDay.AddDays(1);
+
+            var events = (await _eventRepository.GetAllAsync())
+                .Where(e => e.Date >= startOfDay && e.Date < endOfDay && e.Service.CategoryId == 10759477);
+
+            int messageId = _lastMessageIds[query.Message.Chat.Id];
+
+            if (events.Any())
+            {
+                var buttons = events.Select(evt => new[]
+                {
+                    InlineKeyboardButton.WithCallbackData($"{evt.Service.Title} {evt.Date:HH:mm}", $"event_{evt.Id}")
+                }).ToList();
+                // Add Back button to date selection
+                buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_type") });
+
+                await _botClient.EditMessageTextAsync(
+                    chatId: query.Message.Chat.Id,
+                    messageId: messageId,
+                    text: $"Выберите событие:",
+                    replyMarkup: new InlineKeyboardMarkup(buttons)
+                );
+            }
+            else
+            {
+                await _botClient.EditMessageTextAsync(
+                    chatId: query.Message.Chat.Id,
+                    messageId: messageId,
+                    text: "Не удалось найти события на этот день.\n⬅️ Назад",
+                    replyMarkup: new InlineKeyboardMarkup(new[] {
+                        new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_type") }
+                    })
                 );
             }
         }
