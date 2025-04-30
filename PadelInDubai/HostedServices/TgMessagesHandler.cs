@@ -111,11 +111,12 @@ namespace PadelInDubai.HostedServices
         {
             int selectedCategoryId = query.Data == "type_games" ? _gamesId : _trainsId;
             var today = DateTime.Today;
+            var culture = new System.Globalization.CultureInfo("ru-RU");
             var buttons = Enumerable.Range(0, 7)
                 .Select(offset => new[]
                 {
                     InlineKeyboardButton.WithCallbackData(
-                        today.AddDays(offset).ToString("dddd, dd MMM"),
+                        today.AddDays(offset).ToString("dddd, dd MMM", culture),
                         $"date_{selectedCategoryId}_{today.AddDays(offset):yyyy-MM-dd}"
                     )
                 })
@@ -124,7 +125,7 @@ namespace PadelInDubai.HostedServices
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", "back_to_type") });
 
             int messageId = _lastMessageIds[query.Message.Chat.Id];
-            await _botClient.EditMessageText(
+            await _botClient.EditMessageTextAsync(
                 chatId: query.Message.Chat.Id,
                 messageId: messageId,
                 text: $"Выберите дату:",
@@ -213,10 +214,11 @@ namespace PadelInDubai.HostedServices
         private async Task ShowDaysOfWeekSelection(CallbackQuery query, int categoryId)
         {
             var today = DateTime.Today;
+            var culture = new System.Globalization.CultureInfo("ru-RU");
             var buttons = Enumerable.Range(0, 7)
                 .Select(offset => new[] {
                     InlineKeyboardButton.WithCallbackData(
-                        today.AddDays(offset).ToString("dddd, dd MMM"),
+                        today.AddDays(offset).ToString("dddd, dd MMM", culture),
                         $"date_{categoryId}_{today.AddDays(offset):yyyy-MM-dd}"
                     )
                 }).ToList();
@@ -224,7 +226,7 @@ namespace PadelInDubai.HostedServices
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", "back_to_type") });
 
             int messageId = _lastMessageIds[query.Message.Chat.Id];
-            await _botClient.EditMessageText(
+            await _botClient.EditMessageTextAsync(
                 chatId: query.Message.Chat.Id,
                 messageId: messageId,
                 text: $"Выберите дату:",
