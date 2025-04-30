@@ -26,27 +26,27 @@ namespace PadelInDubai.Services
         private readonly ITelegramBotClient _botClient = botClient;
         private readonly IEventRepository _eventRepository = eventRepository;
 
-        public async Task HandleUpdateAsync(Update update)
-        {
-            if (update.Type == UpdateType.Message && update.Message.Text == "/start")
-            {
-                var buttons = new InlineKeyboardMarkup(new[]
-                {
-            new[] { InlineKeyboardButton.WithCallbackData("🎾 Игры", "choose_game") },
-            new[] { InlineKeyboardButton.WithCallbackData("🏋️ Тренировки", "choose_training") }
-        });
+        //public async Task HandleUpdateAsync(Update update)
+        //{
+        //    if (update.Type == UpdateType.Message && update.Message.Text == "/start")
+        //    {
+        //        var buttons = new InlineKeyboardMarkup(new[]
+        //        {
+        //    new[] { InlineKeyboardButton.WithCallbackData("🎾 Игры", "choose_game") },
+        //    new[] { InlineKeyboardButton.WithCallbackData("🏋️ Тренировки", "choose_training") }
+        //});
 
-                await _botClient.SendTextMessageAsync(
-                    chatId: update.Message.Chat.Id,
-                    text: "Добро пожаловать!",
-                    replyMarkup: buttons
-                );
-            }
-            else if (update.Type == UpdateType.CallbackQuery)
-            {
-                //await HandleCallbackQueryAsync(update.CallbackQuery);
-            }
-        }
+        //        await _botClient.SendTextMessageAsync(
+        //            chatId: update.Message.Chat.Id,
+        //            text: "Добро пожаловать!",
+        //            replyMarkup: buttons
+        //        );
+        //    }
+        //    else if (update.Type == UpdateType.CallbackQuery)
+        //    {
+        //        //await HandleCallbackQueryAsync(update.CallbackQuery);
+        //    }
+        //}
 
         public async Task SendEventMessageAsync(EventDto evt, bool pin = false)
         {

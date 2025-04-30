@@ -66,15 +66,15 @@ namespace PadelInDubai.HostedServices
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Games", "type_games"),
-                    InlineKeyboardButton.WithCallbackData("Trainings", "type_trainings")
+                    InlineKeyboardButton.WithCallbackData("Игры", "type_games"),
+                    InlineKeyboardButton.WithCallbackData("Тренировки", "type_trainings")
                 }
             };
 
             // Send initial message and store its message ID.
             var sent = await _botClient.SendTextMessageAsync(
                 chatId: message.Chat.Id,
-                text: "Choose an option:",
+                text: "Выберите тип:",
                 replyMarkup: new InlineKeyboardMarkup(buttons)
             );
             _lastMessageIds[message.Chat.Id] = sent.MessageId;
@@ -99,7 +99,7 @@ namespace PadelInDubai.HostedServices
             await _botClient.EditMessageTextAsync(
                 chatId: query.Message.Chat.Id,
                 messageId: messageId,
-                text: $"Choose a date for {selectedType}:",
+                text: $"Выберите дату:",
                 replyMarkup: new InlineKeyboardMarkup(buttons)
             );
         }
@@ -138,7 +138,7 @@ namespace PadelInDubai.HostedServices
                 await _botClient.EditMessageTextAsync(
                     chatId: query.Message.Chat.Id,
                     messageId: messageId,
-                    text: "No events found for that day."
+                    text: "Не удалось найти события на этот день."
                 );
             }
         }
