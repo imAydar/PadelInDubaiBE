@@ -32,13 +32,13 @@ namespace PadelInDubai.Services
             {
                 var buttons = new InlineKeyboardMarkup(new[]
                 {
-            new[] { InlineKeyboardButton.WithCallbackData("🎾 Game", "choose_game") },
-            new[] { InlineKeyboardButton.WithCallbackData("🏋️ Training", "choose_training") }
+            new[] { InlineKeyboardButton.WithCallbackData("🎾 Игры", "choose_game") },
+            new[] { InlineKeyboardButton.WithCallbackData("🏋️ Тренировки", "choose_training") }
         });
 
                 await _botClient.SendTextMessageAsync(
                     chatId: update.Message.Chat.Id,
-                    text: "Welcome! What would you like to do?",
+                    text: "Добро пожаловать!",
                     replyMarkup: buttons
                 );
             }
@@ -131,7 +131,7 @@ namespace PadelInDubai.Services
 
             await _botClient.SendMessage(
                 chatId: message.Chat.Id,
-                text: "Choose an option:",
+                text: "Выберите тип события::",
                 replyMarkup: new InlineKeyboardMarkup(buttons)
             );
         }
@@ -151,7 +151,7 @@ namespace PadelInDubai.Services
 
             await _botClient.SendMessage(
                 chatId: query.Message.Chat.Id,
-                text: $"Choose a date for {selectedType}:",
+                text: $"Выберите день: {selectedType}:",
                 replyMarkup: new InlineKeyboardMarkup(buttons)
             );
         }
@@ -189,7 +189,7 @@ namespace PadelInDubai.Services
             {
                 await _botClient.SendMessage(
                     chatId: query.Message.Chat.Id,
-                    text: "No events found for that day."
+                    text: "Не удалось найти события на этот день."
                 );
             }
         }
