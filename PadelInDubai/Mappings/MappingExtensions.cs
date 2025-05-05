@@ -246,7 +246,7 @@ namespace PadelInDubai.Mappings
 
                 LocationName = evt.Staff?.Name,
                 LocationUrl = evt.Staff?.LocationUrl,
-                Picture = evt.Service?.ImageUrl ?? evt.Staff?.AvatarBig,
+                Picture = string.IsNullOrWhiteSpace(evt.Service?.ImageUrl) ? evt.Staff?.AvatarBig : evt.Service.ImageUrl,
                 RecordsCount = evt.RecordsCount,
                 MessageId = evt.MessageId,
                 TextHash = evt.TextHash,
