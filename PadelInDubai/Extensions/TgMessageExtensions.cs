@@ -68,19 +68,15 @@ namespace PadelInDubai.Extensions
             //https://maps.app.goo.gl/UKwd6Hx1LQQZqN917
             var message = $@"
 🎾 {eventDto.Title}
-📅 Когда: {formattedDate} в {formattedTime}
-📍 Где: [{eventDto.LocationName}]({eventDto.LocationUrl})
-Для кого: [Определятор Уровня](https://forms.gle/svzhWNGx354VHjY27)
-💰 Стоимость: {eventDto.PriceMax} AED
+📅 {formattedDate} в {formattedTime}
+📍 [{eventDto.LocationName}]({eventDto.LocationUrl})
+💪 Уровень
+[Определятор Уровня](https://forms.gle/svzhWNGx354VHjY27)
+💰 {eventDto.PriceMax} AED
 [C абонементом](https://padelindubai.club/p/packs/) 135 AED
 👥 Места: {freeSlotsCount} из {eventDto.Capacity}  
 
-📌 Описание:
-{eventDto.Comment}
-
-📩 Запись: нажмите на кнопку и укажите уровень.
-
-Возникнут вопросы? Пиши @padelindubai
+📌 {eventDto.Comment}
 ";
 
             return message;

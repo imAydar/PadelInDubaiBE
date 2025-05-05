@@ -92,6 +92,7 @@ namespace PadelInDubai.DAL
                     if (existingServices.TryGetValue(service.Id, out var existingService))
                     {
                         // Update existing service
+                        service.ImageUrl = existingService.ImageUrl;
                         _context.Entry(existingService).CurrentValues.SetValues(service);
                     }
                     else
