@@ -4,11 +4,41 @@ using System.Text.RegularExpressions;
 using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
 using PadelInDubai.DAL.Entities;
+using Telegram.Bot.Types;
 
 namespace PadelInDubai.Extensions
 {
     public static class TgMessageExtensions
     {
+        public async static Task<InputFileStream> GetPhoto(this EventDto evt)
+        {
+            /*using var httpClient = new HttpClient();
+            using var imageStream = await httpClient.GetStreamAsync(evt.Picture);
+            var inputFile = InputFile.FromStream(imageStream);//, "photo.jpg");
+            return inputFile;*/
+            var fileName = $"{evt.Picture}";
+            var filePath = Path.Combine(AppContext.BaseDirectory, "Content", fileName);
+
+            using var stream = System.IO.File.OpenRead(filePath);
+            return InputFileStream.FromStream(stream);
+        }
+
+        public static string GetLevel(this EventDto evt)
+        {
+            var match = Regex.Match(evt.Title, @"\b(\w+)\s*\([^)]+\)");
+            if (match.Success)
+            {
+                return match.Value;
+            }
+
+            var startIndex = evt.Title.IndexOf('(');
+            var endIndex = evt.Title.IndexOf(')');
+
+            if (startIndex == -1 || endIndex == -1 || endIndex <= startIndex)
+                return string.Empty;
+
+            return evt.Title.Substring(startIndex + 1, endIndex - startIndex - 1);
+        }
 
         public static string GetShortTitle(this Event evt)
         {
@@ -70,7 +100,7 @@ namespace PadelInDubai.Extensions
 🎾 {eventDto.Title}
 📅 {formattedDate} в {formattedTime}
 📍 [{eventDto.LocationName}]({eventDto.LocationUrl})
-💪 Уровень
+💪 {eventDto.GetLevel()}
 [Определятор Уровня](https://forms.gle/svzhWNGx354VHjY27)
 💰 {eventDto.PriceMax} AED
 [C абонементом](https://padelindubai.club/p/packs/) 135 AED

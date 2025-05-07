@@ -58,10 +58,15 @@ namespace PadelInDubai.Services
             int? topicId = evt.Group == Mappings.Group.Game ? _gamesTopicId :
                              evt.Group == Mappings.Group.Train ? _trainsTopicId :
                                 null;
+            var fileName = $"{evt.Picture}";
+            var filePath = Path.Combine(AppContext.BaseDirectory, "Content", fileName);
+
+            using var stream = System.IO.File.OpenRead(filePath);
+
             var message = await _botClient.SendPhoto(
                 chatId: chatId,
                 messageThreadId: _useTopics ? topicId.Value : null,
-                photo: evt.Picture,
+                photo: InputFile.FromStream(stream),
                 caption: text,
                 parseMode: ParseMode.MarkdownV2,
                 replyMarkup: inlineKeyboard

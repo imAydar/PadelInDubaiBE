@@ -22,6 +22,8 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Telegram.Bot" Version="22.4.4" />
+	  <Content Include="Content\**\*.*">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
   </ItemGroup>
-
 </Project>
