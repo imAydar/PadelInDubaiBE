@@ -60,8 +60,11 @@ namespace PadelInDubai.Services
                                 null;
             var fileName = $"{evt.Picture}";
             var filePath = Path.Combine(AppContext.BaseDirectory, "Content", fileName);
-
-            using var stream = System.IO.File.OpenRead(filePath);
+            if (!File.Exists(filePath))
+            {
+                filePath = Path.Combine(AppContext.BaseDirectory, "Content", "Untitled.jpg");
+            }
+            using var stream = File.OpenRead(filePath);
 
             var message = await _botClient.SendPhoto(
                 chatId: chatId,
