@@ -1,4 +1,5 @@
 ﻿using PadelInDubai.DAL;
+using PadelInDubai.DAL.Entities;
 using PadelInDubai.Extensions;
 using PadelInDubai.Mappings;
 using PadelInDubai.Models;
@@ -99,7 +100,7 @@ namespace PadelInDubai.HostedServices
                 }
             };
 
-            var sent = await _botClient.SendTextMessageAsync(
+            var sent = await _botClient.SendMessage(
                 chatId: message.Chat.Id,
                 text: "Выберите тип:",
                 replyMarkup: new InlineKeyboardMarkup(buttons)
@@ -112,7 +113,7 @@ namespace PadelInDubai.HostedServices
             int selectedCategoryId = query.Data == "type_games" ? _gamesId : _trainsId;
             var today = DateTime.Today;
             var culture = new System.Globalization.CultureInfo("ru-RU");
-            var buttons = Enumerable.Range(0, 7)
+            var buttons = Enumerable.Range(0, 2)
                 .Select(offset => new[]
                 {
                     InlineKeyboardButton.WithCallbackData(
@@ -125,7 +126,7 @@ namespace PadelInDubai.HostedServices
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", "back_to_type") });
 
             int messageId = _lastMessageIds[query.Message.Chat.Id];
-            await _botClient.EditMessageTextAsync(
+            await _botClient.EditMessageText(
                 chatId: query.Message.Chat.Id,
                 messageId: messageId,
                 text: $"Выберите дату:",
@@ -170,7 +171,7 @@ namespace PadelInDubai.HostedServices
                     var (inlineKeyboard, text) = evt.ToDto().GetMessageParams();
                     // Add Back button as a new row
                     var keyboardRows = inlineKeyboard.InlineKeyboard.ToList();
-                    keyboardRows.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_date_{evt.Date:yyyy-MM-dd}_{evt.Service.CategoryId}") });
+                    keyboardRows.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_days_{evt.Service.CategoryId}") });
                     var updatedKeyboard = new InlineKeyboardMarkup(keyboardRows);
 
                     await _botClient.EditMessageText(
@@ -215,7 +216,7 @@ namespace PadelInDubai.HostedServices
         {
             var today = DateTime.Today;
             var culture = new System.Globalization.CultureInfo("ru-RU");
-            var buttons = Enumerable.Range(0, 7)
+            var buttons = Enumerable.Range(0, 2)
                 .Select(offset => new[] {
                     InlineKeyboardButton.WithCallbackData(
                         today.AddDays(offset).ToString("dddd, dd MMM", culture),
@@ -223,10 +224,27 @@ namespace PadelInDubai.HostedServices
                     )
                 }).ToList();
             // Add back to type selection
+            //var endDate = DateTime.Today.AddDays(8).AddSeconds(-1);
+            //var upcomingEvents = (await _eventRepository.GetAllAsync())
+            //    .Where(e => e.Date >= DateTime.Now && e.Date <= endDate && e.Service.CategoryId == categoryId)
+            //    .OrderBy(x => x.Date)
+            //    .ToList();
+            //var dates = upcomingEvents
+            //    .Select(e => e.Date)
+            //    .Select(d => (int)d.DayOfWeek - 1);
+
+            //var buttons = dates
+            //    .Select(offset => new[] {
+            //        InlineKeyboardButton.WithCallbackData(
+            //            today.AddDays(offset).ToString("dddd, dd MMM", culture),
+            //            $"date_{categoryId}_{today.AddDays(offset):yyyy-MM-dd}"
+            //        )
+            //    }).ToList();
+
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", "back_to_type") });
 
             int messageId = _lastMessageIds[query.Message.Chat.Id];
-            await _botClient.EditMessageTextAsync(
+            await _botClient.EditMessageText(
                 chatId: query.Message.Chat.Id,
                 messageId: messageId,
                 text: $"Выберите дату:",
@@ -283,7 +301,7 @@ namespace PadelInDubai.HostedServices
             var (inlineKeyboard, text) = evt.ToDto().GetMessageParams();
             // Add Back button as a new row
             var keyboardRows = inlineKeyboard.InlineKeyboard.ToList();
-            keyboardRows.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_date_{evt.Date:yyyy-MM-dd}_{evt.Service.CategoryId}") });
+            keyboardRows.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"back_to_days_{evt.Service.CategoryId}") }); //$"back_to_date_{evt.Date:yyyy-MM-dd}_{evt.Service.CategoryId}") });
             var updatedKeyboard = new InlineKeyboardMarkup(keyboardRows);
 
             int messageId = _lastMessageIds[query.Message.Chat.Id];
