@@ -84,7 +84,7 @@ namespace PadelInDubai.Extensions
                     }
                 }
             }
-            message += "—\r\n[Только анонсы игр (без чата)](https://t.me/padeldubai_games)";
+            message += "—\r\n[Только анонсы игр \\(без чата\\)](https://t.me/padeldubai_games)";
             return message;
         }
 
