@@ -105,7 +105,7 @@ namespace PadelInDubai.Extensions
 💰 {eventDto.PriceMax} AED
 [C абонементом](https://padelindubai.club/p/packs/) 135 AED
 
-📌 {eventDto.Comment}
+📝 {eventDto.Comment}
 
 👥 Места: {freeSlotsCount} из {eventDto.Capacity} 
 
