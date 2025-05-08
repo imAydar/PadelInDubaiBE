@@ -107,8 +107,7 @@ namespace PadelInDubai.Extensions
 
 📝 {eventDto.Comment}
 
-👥 Места: {freeSlotsCount} из {eventDto.Capacity} 
-
+👥 Места: {freeSlotsCount} из {eventDto.Capacity}
 ";
 
             return message;
