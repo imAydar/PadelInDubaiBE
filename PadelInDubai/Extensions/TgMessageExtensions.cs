@@ -75,7 +75,7 @@ namespace PadelInDubai.Extensions
             for (int i = 0; i < records.Count; i++)
             {
                 //var confirmed = records[i].PaidFull == 1 ? "✅" : string.Empty;
-                message += $"{ind++}.🎾 {records[i].Client.Name} {records[i].Client.Level}" + Environment.NewLine;
+                message += $"{ind++}. {records[i].Client.Name} {records[i].Client.Level}" + Environment.NewLine;
                 if (records[i].ClientsCount > 1)
                 {
                     for (int j = 1; j < records[i].ClientsCount; j++)
