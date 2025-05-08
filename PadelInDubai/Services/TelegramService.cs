@@ -20,8 +20,8 @@ namespace PadelInDubai.Services
         private readonly ILogger<TelegramService> _logger = logger;
 
         private static readonly string _chatId = Environment.GetEnvironmentVariable("PD_TgChatId");
-        private const int _gamesTopicId = 38;
-        private const int _trainsTopicId = 37;
+        private const int _gamesTopicId = 4163;
+        private const int _trainsTopicId = 2686;
         private const bool _useTopics = true;
 
         private readonly ITelegramBotClient _botClient = botClient;
