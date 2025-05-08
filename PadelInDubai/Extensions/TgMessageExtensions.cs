@@ -103,7 +103,7 @@ namespace PadelInDubai.Extensions
 💪 {eventDto.GetLevel()}
 [Определятор Уровня](https://forms.gle/svzhWNGx354VHjY27)
 💰 {eventDto.PriceMax} AED
-[C абонементом](https://padelindubai.club/p/packs/) 135 AED
+[C абонементом](https://padelindubai.club/p/packs/) от 135 AED
 
 📝 {eventDto.Comment}
 
