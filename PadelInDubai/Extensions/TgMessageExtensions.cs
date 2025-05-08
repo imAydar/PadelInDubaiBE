@@ -80,11 +80,11 @@ namespace PadelInDubai.Extensions
                 {
                     for (int j = 1; j < records[i].ClientsCount; j++)
                     {
-                        message += $"{ind++}.🎾 {records[i].Client.Name} +1" + Environment.NewLine;
+                        message += $"{ind++}. {records[i].Client.Name} +1" + Environment.NewLine;
                     }
                 }
             }
-            message += "—\r\n[Анонсы игр](https://t.me/padeldubai_games)";
+            message += "—\r\n[Только анонсы игр (без чата)](https://t.me/padeldubai_games)";
             return message;
         }
 
@@ -104,9 +104,11 @@ namespace PadelInDubai.Extensions
 [Определятор Уровня](https://forms.gle/svzhWNGx354VHjY27)
 💰 {eventDto.PriceMax} AED
 [C абонементом](https://padelindubai.club/p/packs/) 135 AED
-👥 Места: {freeSlotsCount} из {eventDto.Capacity}  
 
 📌 {eventDto.Comment}
+
+👥 Места: {freeSlotsCount} из {eventDto.Capacity} 
+
 ";
 
             return message;
