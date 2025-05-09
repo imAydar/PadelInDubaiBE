@@ -86,7 +86,10 @@ namespace PadelInDubai.Services
                     {
                         if (ex.Message == "Bad Request: message to edit not found")
                         {
-                            await _telegramService.SendEventMessageAsync(evt.ToDto());
+                            if (evt.Date.Date >= DateTimeOffset.Now.Date && evt.Date.Date <= DateTimeOffset.Now.Date.AddDays(1))
+                            {
+                                await _telegramService.SendEventMessageAsync(evt.ToDto());
+                            }
                         }
                         else
                         {
