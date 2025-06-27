@@ -219,7 +219,7 @@ namespace PadelInDubai.Mappings
             return new DAL.Entities.Client
             {
                 Id = modelClient.Id,
-                Name = dispName,
+                FullName = dispName,
                 Phone = modelClient.Phone,
                 Email = modelClient.Email,
                 SuccessVisitsCount = modelClient.SuccessVisitsCount,
@@ -294,10 +294,10 @@ namespace PadelInDubai.Mappings
 
             return new Models.ClientData
             {
-                DisplayName = client.Name,
+                DisplayName = client.FullName,
                 Email = client.Email,
                 Id = client.Id,
-                Name = client.Name,
+                Name = client.FullName,
                 FailVisitsCount = client.FailVisitsCount,
                 Phone = client.Phone,
                 SuccessVisitsCount = client.SuccessVisitsCount,

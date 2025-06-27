@@ -66,7 +66,7 @@ namespace PadelInDubai.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("text");
 
