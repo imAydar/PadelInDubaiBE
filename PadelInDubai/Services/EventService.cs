@@ -1,4 +1,5 @@
 ﻿using PadelInDubai.DAL;
+using PadelInDubai.DAL.Entities;
 using PadelInDubai.Mappings;
 using PadelInDubai.Models.Dtos;
 using PadelInDubai.Services.Interfaces;
@@ -129,6 +130,19 @@ namespace PadelInDubai.Services
                 evt.MessageId = messageId;
                 await _eventRepository.UpsertEventsAsync([evt]);
             }
+        }
+
+        public async Task<IEnumerable<ClientDto>> GetClients(DateTimeOffset dateTime, Group type)
+        {
+            var evts = await _eventRepository.GetAllAsync();
+            var evt = evts.Select(e => e.ToDto()).Where(e => e.Date == dateTime && e.Group == type).FirstOrDefault();
+            return evt?.Records?.Select(r => new ClientDto
+            {
+                ClientTags = r.Client.ClientTags,
+                DisplayName = r.Client.DisplayName,
+                Level = r.Client.Level,
+                Phone = r.Client.Phone
+            });
         }
     }
 }
