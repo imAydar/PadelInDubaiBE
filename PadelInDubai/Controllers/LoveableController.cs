@@ -20,7 +20,7 @@ namespace PadelInDubai.Controllers
         public IActionResult Ping() => Ok("Alive");
 
         [HttpGet("GetClients")]
-        public async Task<IActionResult> GetClients([FromQuery] DateTimeOffset dateTime, 
+        public async Task<IActionResult> GetClients([FromQuery] DateTime dateTime, 
             [FromQuery] Group type)
         {
             var clients = await _service.GetClients(dateTime, type);

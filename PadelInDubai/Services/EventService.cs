@@ -17,6 +17,9 @@ namespace PadelInDubai.Services
         private readonly TelegramService _telegramService = telegramService;
         private readonly IBookingService _bookingService = bookingService;
 
+        private const int _gamesId = 10759477;
+        private const int _trainsId = 10761747;
+
         public async Task DeleteAllTgMessages()
         {
             var events = await _eventRepository.GetAllAsync();
@@ -132,11 +135,12 @@ namespace PadelInDubai.Services
             }
         }
 
-        public async Task<IEnumerable<ClientDto>> GetClients(DateTimeOffset dateTime, Group type)
+        public async Task<IEnumerable<ClientDto>> GetClients(DateTime dateTime, Group type)
         {
-            var evts = await _eventRepository.GetAllAsync();
-            var evt = evts.Select(e => e.ToDto()).Where(e => e.Date == dateTime && e.Group == type).FirstOrDefault();
-            return evt?.Records?.Select(r => new ClientDto
+            var categoryId = type == Group.Game ? _gamesId : _trainsId;
+            var evts = await _eventRepository.GetByDate(dateTime, categoryId);
+            var evt = evts.Where(e => e.Date == dateTime).FirstOrDefault() ?? evts.FirstOrDefault();
+            return evt?.ToDto().Records?.Select(r => new ClientDto
             {
                 ClientTags = r.Client.ClientTags,
                 DisplayName = r.Client.DisplayName,
