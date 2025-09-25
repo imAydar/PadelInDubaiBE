@@ -16,10 +16,12 @@ namespace PadelInDubai.Controllers
             _service = service;
         }
 
-        public async Task<IEnumerable<ClientDto>> GetClients(DateTimeOffset dateTime, Group type)
+        [HttpGet]
+        public async Task<IEnumerable<ClientDto>> GetClients([FromQuery] DateTimeOffset dateTime, 
+            [FromQuery] Group type)
         {
-            var evts = await _service.GetClients(dateTime, type);
-            return evts;
+            var clients = await _service.GetClients(dateTime, type);
+            return clients;
         }
     }
 }
