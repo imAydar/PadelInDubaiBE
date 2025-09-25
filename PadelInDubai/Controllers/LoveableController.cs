@@ -16,12 +16,15 @@ namespace PadelInDubai.Controllers
             _service = service;
         }
 
+        [HttpGet("ping")]
+        public IActionResult Ping() => Ok("Alive");
+
         [HttpGet]
-        public async Task<IEnumerable<ClientDto>> GetClients([FromQuery] DateTimeOffset dateTime, 
+        public async Task<IActionResult> GetClients([FromQuery] DateTimeOffset dateTime, 
             [FromQuery] Group type)
         {
             var clients = await _service.GetClients(dateTime, type);
-            return clients;
+            return Ok(clients);
         }
     }
 }
