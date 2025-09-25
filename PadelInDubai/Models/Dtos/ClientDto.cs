@@ -6,5 +6,6 @@
         public string DisplayName { get; set; }
         public string? Level { get; set; }
         public List<ClientTagData> ClientTags { get; set; }
+        public int ClientsCount { get; internal set; }
     }
 }

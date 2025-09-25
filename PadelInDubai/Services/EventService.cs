@@ -145,7 +145,8 @@ namespace PadelInDubai.Services
                 ClientTags = r.Client.ClientTags,
                 DisplayName = r.Client.DisplayName,
                 Level = r.Client.Level,
-                Phone = r.Client.Phone
+                Phone = r.Client.Phone,
+                ClientsCount = r.ClientsCount
             });
         }
     }
