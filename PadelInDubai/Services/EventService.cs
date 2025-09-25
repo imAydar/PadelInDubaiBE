@@ -142,7 +142,6 @@ namespace PadelInDubai.Services
             var evt = evts.Where(e => e.Date == dateTime).FirstOrDefault() ?? evts.FirstOrDefault();
             return evt?.ToDto().Records?.Select(r => new ClientDto
             {
-                ClientTags = r.Client.ClientTags,
                 DisplayName = r.Client.DisplayName,
                 Level = r.Client.Level,
                 Phone = r.Client.Phone,
