@@ -26,7 +26,7 @@ namespace PadelInDubai.DAL
         public async Task<IEnumerable<Event>> UpsertEventsAsync(IEnumerable<Event> events)
         {
             _cache.Clear();
-            
+
             // Validate input
             var eventsList = events.ToList();
             if (eventsList.Any(e => e.Service == null || e.Staff == null))
@@ -72,7 +72,7 @@ namespace PadelInDubai.DAL
                         _context.Categories.Add(category);
                     }
                 }
-                
+
                 await _context.SaveChangesAsync();
             }
 
@@ -88,7 +88,7 @@ namespace PadelInDubai.DAL
                 {
                     // Detach Category reference to avoid tracking conflicts
                     service.Category = null;
-                    
+
                     if (existingServices.TryGetValue(service.Id, out var existingService))
                     {
                         // Update existing service
@@ -104,7 +104,7 @@ namespace PadelInDubai.DAL
                         _context.Services.Add(service);
                     }
                 }
-                
+
                 await _context.SaveChangesAsync();
             }
 
@@ -130,7 +130,7 @@ namespace PadelInDubai.DAL
                         _context.Staffs.Add(staffMember);
                     }
                 }
-                
+
                 await _context.SaveChangesAsync();
             }
 
@@ -147,7 +147,7 @@ namespace PadelInDubai.DAL
                     // Preserve MessageId and TextHash from existing event
                     evt.MessageId = existingEvent.MessageId;
                     evt.TextHash = existingEvent.TextHash;
-                    
+
                     // Update existing event
                     _context.Entry(existingEvent).CurrentValues.SetValues(evt);
                 }
@@ -156,12 +156,12 @@ namespace PadelInDubai.DAL
                     // Detach navigation properties to avoid tracking conflicts
                     evt.Service = null;
                     evt.Staff = null;
-                    
+
                     // Add new event
                     _context.Events.Add(evt);
                 }
             }
-            
+
             await _context.SaveChangesAsync();
 
             _cache.Clear();
@@ -227,6 +227,29 @@ namespace PadelInDubai.DAL
                     var cacheEntryOptions = new MemoryCacheEntryOptions()
                         .SetSlidingExpiration(TimeSpan.FromMinutes(5));
                     _cache.Set(cacheKey, eventEntity, cacheEntryOptions);
+                }
+            }
+
+            if (eventEntity?.StaffId == 2196433)
+            {
+                var title = eventEntity.Service?.Title;
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    var name = title.Split('-')?.FirstOrDefault()?.Trim();
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        return eventEntity;
+                    }
+
+                    var location = name switch
+                    {
+                        "Padel Park" => "https://maps.app.goo.gl/oUNGafHiuZGatP7e9",
+                        "Padel 26" => "https://maps.app.goo.gl/3ak22nvTm2K5hwQy9",
+                        _ => string.Empty
+                    };
+
+                    eventEntity.Staff.LocationUrl = location;
+                    eventEntity.Staff.Name = name;
                 }
             }
 
