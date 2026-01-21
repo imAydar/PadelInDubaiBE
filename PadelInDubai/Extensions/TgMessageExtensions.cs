@@ -5,6 +5,7 @@ using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
 using PadelInDubai.DAL.Entities;
 using Telegram.Bot.Types;
+using PadelInDubai.Services;
 
 namespace PadelInDubai.Extensions
 {
@@ -47,7 +48,7 @@ namespace PadelInDubai.Extensions
 
         public static (InlineKeyboardMarkup inlineKeyboard, string text) GetMessageParams(this EventDto evt, List<RecordData> records = null)
         {
-            var link = $"https://b818310.alteg.io/company/768552/activity/info/{evt.Id}";
+            var link = $"https://b818310.alteg.io/company/{AltegioClient.CompanyId}/activity/info/{evt.Id}";
             // TODO: remove btn if date is greater than now.
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {

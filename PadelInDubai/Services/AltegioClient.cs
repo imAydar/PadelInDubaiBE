@@ -16,6 +16,7 @@ namespace PadelInDubai.Services
     {
         private readonly HttpClient _httpClient;
         private static string _bearer = Environment.GetEnvironmentVariable("PD_bearer");
+        public const int CompanyId = 768552;
 
         public AltegioClient(HttpClient httpClient)
         {
@@ -24,7 +25,7 @@ namespace PadelInDubai.Services
 
         public async Task<IEnumerable<EventData>> GetUpcomingEvents()
         {
-            var url = "https://api.alteg.io/api/v1/activity/768552/search";
+            var url = $"https://api.alteg.io/api/v1/activity/{CompanyId}/search";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _bearer);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.api.v2+json"));
@@ -48,7 +49,7 @@ namespace PadelInDubai.Services
 
         public async Task<EventData> GetEvent(int activityId)
         {
-            var url = $"https://api.alteg.io/api/v1/activity/768552/{activityId}";
+            var url = $"https://api.alteg.io/api/v1/activity/{CompanyId}/{activityId}";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _bearer);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.api.v2+json"));
@@ -72,7 +73,7 @@ namespace PadelInDubai.Services
 
         public async Task<IEnumerable<RecordData>> GetRecords(int activityId)
         {
-            var url = $"https://api.alteg.io/api/v1/records/768552?activity_id={activityId}";
+            var url = $"https://api.alteg.io/api/v1/records/{CompanyId}?activity_id={activityId}";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _bearer);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.api.v2+json"));

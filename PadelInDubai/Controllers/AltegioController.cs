@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using PadelInDubai.DAL;
 using PadelInDubai.Mappings;
+using PadelInDubai.Migrations;
 using PadelInDubai.Models;
 using PadelInDubai.Services;
 using PadelInDubai.Services.Interfaces;
@@ -78,6 +79,11 @@ namespace PadelInDubai.Controllers
             _logger.LogInformation("Altegio webhook received. Status: {Status}, Record ID: {Id}, Client: {ClientName}",
                 request.Status, request.Data?.Id, request.Data?.Client?.DisplayName);
 
+            if (request.CompanyId != AltegioClient.CompanyId)
+            {
+                _logger.LogWarning($"Wrong company Id {request.CompanyId}");
+                return Ok();
+            }
             switch (request.Status)
             {
                 case "create":
